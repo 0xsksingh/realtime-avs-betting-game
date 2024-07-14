@@ -1,4 +1,4 @@
-import tokenContract from "../contracts/betting-game-on-l3.json";
+import tokenContract from "../contracts/betting-avs-contract.json";
 import { ethers } from "ethers";
 import {
   prepareWriteContract,
@@ -81,6 +81,7 @@ export const wheel = (set, get) => ({
       overrides: {
         value: ethers.utils.parseEther(ticket * 0.001 + ""),
       },
+      gasLimit: 5000000
     });
 
     console.log("config created", config)

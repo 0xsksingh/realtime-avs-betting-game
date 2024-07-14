@@ -11,6 +11,7 @@ export default function About() {
           <p>REALTIME ON-Chain</p>
           <p>ON-Chain</p>
           <p>Betting using on L3 OP-MODE_CELESTIA CHAIN powered by GELLATO VRF</p>
+          <p>utilsing custom AVS</p>
         </inner-column>
       </section>
     </>

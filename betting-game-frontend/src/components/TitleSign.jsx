@@ -14,6 +14,9 @@ export default function TitleSign() {
   });
   return (
     <h1 className="attention-voice flicker-in-2">
+      <span>A</span>
+      <span>V</span>
+      <span>S</span>
       <span>B</span>
       <span>E</span>
       <span>T</span>
@@ -25,8 +28,6 @@ export default function TitleSign() {
       <span>A</span>
       <span>M</span>
       <span>E</span>
-      <span>ON</span>
-      <span>L3</span>
     </h1>
   );
 }
