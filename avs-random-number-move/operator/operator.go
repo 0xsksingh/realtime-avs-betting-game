@@ -2,9 +2,14 @@ package operator
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"math/big"
+	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -306,8 +311,72 @@ func (o *Operator) Start(ctx context.Context) error {
 	}
 }
 
+// Block struct to unmarshal the JSON response from the Movement API
+type Block struct {
+	BlockHeight    string `json:"block_height"`
+	BlockHash      string `json:"block_hash"`
+	BlockTimestamp string `json:"block_timestamp"`
+	FirstVersion   string `json:"first_version"`
+	LastVersion    string `json:"last_version"`
+}
+
 // Takes a NewTaskCreatedLog struct as input and returns a TaskResponseHeader struct.
 // The TaskResponseHeader struct is the struct that is signed and sent to the contract as a task response.
+func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated) *cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse {
+	o.logger.Debug("Received new task", "task", newTaskCreatedLog)
+	o.logger.Info("Received new task",
+		"numberToBeSquared", newTaskCreatedLog.Task.NumberToBeSquared,
+		"taskIndex", newTaskCreatedLog.TaskIndex,
+		"taskCreatedBlock", newTaskCreatedLog.Task.TaskCreatedBlock,
+		"quorumNumbers", newTaskCreatedLog.Task.QuorumNumbers,
+		"QuorumThresholdPercentage", newTaskCreatedLog.Task.QuorumThresholdPercentage,
+	)
+
+	// Convert NumberToBeSquared to int and use it as the block height
+	blockHeight := newTaskCreatedLog.Task.NumberToBeSquared.Int64()
+
+	// Fetch the last digit of the block hash for the given block height
+	lastDigitOfBlockHash := getLastDigitOfMovementBlockHash(int(blockHeight))
+
+	// Compute the square of the number to be squared
+	numberSquared := big.NewInt(0).Exp(newTaskCreatedLog.Task.NumberToBeSquared, big.NewInt(2), nil)
+
+	// Update the task response to include the last digit of the block hash
+	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
+		ReferenceTaskIndex:   newTaskCreatedLog.TaskIndex,
+		NumberSquared:        numberSquared,
+		LastDigitOfBlockHash: lastDigitOfBlockHash, // Include the last digit of the block hash
+	}
+
+	return taskResponse
+}
+
+// getLastDigitOfMovementBlockHash fetches the last digit of the block hash for a given block height using the Movement API
+func getLastDigitOfMovementBlockHash(blockHeight int) int {
+	// Make an HTTP GET request to the Aptos API to fetch the block hash by height
+	resp, err := http.Get(fmt.Sprintf("https://aptos.devnet.m1.movementlabs.xyz/blocks/by_height/%d", blockHeight))
+	if err != nil {
+		log.Fatalf("Error fetching block: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalf("Error reading response body: %v", err)
+	}
+
+	var block Block
+	json.Unmarshal(body, &block)
+
+	// Extract the last hex digit of the block hash (will be values from 0 to 15)
+	lastDigit, err := strconv.ParseInt(string([]byte(block.BlockHash)[len(block.BlockHash)-1]), 16, 8)
+	if err != nil {
+		log.Fatalf("Error parsing last digit of block hash: %v", err)
+	}
+	return int(lastDigit)
+}
+
+/*
 func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated) *cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse {
 	o.logger.Debug("Received new task", "task", newTaskCreatedLog)
 	o.logger.Info("Received new task",
@@ -324,6 +393,7 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 	}
 	return taskResponse
 }
+*/
 
 func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse) (*aggregator.SignedTaskResponse, error) {
 	taskResponseHash, err := core.GetTaskResponseDigest(taskResponse)
