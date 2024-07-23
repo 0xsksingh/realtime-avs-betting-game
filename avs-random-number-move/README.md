@@ -1,4 +1,4 @@
-# Incredible Squaring AVS
+# AVS Random Number Generation
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/Layr-Labs/incredible-squaring-avs)](https://goreportcard.com/report/github.com/Layr-Labs/incredible-squaring-avs)
 

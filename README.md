@@ -4,7 +4,13 @@ Welcome to the Realtime AVS Betting Game.
 
 This project brings the excitement of betting on a roulette-style game to the blockchain. Players can wager on various outcomes and see results in real-time, all powered by random numbers generated using a customized Actively Validated Service (AVS).
 
-## Actively Validated Services (AVS)
+![Architecture](https://github.com/user-attachments/assets/ff7c1869-dff4-4156-a3de-7d01b72a4dcc)
+
+## Demo Video - Click to view the Live Demo 
+
+[![Demo_Video](https://img.youtube.com/vi/XNlCTk0chRM/0.jpg)](https://www.youtube.com/watch?v=XNlCTk0chRM)
+
+## Introduction
 
 ### What is AVS?
 
